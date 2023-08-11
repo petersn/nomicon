@@ -122,21 +122,22 @@ This optimization still applies to fieldless enums with an explicit `repr(u*)`, 
 ## repr(packed)
 
 `repr(packed)` forces Rust to strip any padding, and only align the type to a
-byte. This may improve the memory footprint, but will likely have other negative
-side-effects.
+byte. This may improve the memory footprint, and is unlikely to have other
+negative side-effects.
 
-In particular, most architectures *strongly* prefer values to be aligned. This
-may mean the unaligned loads are penalized (x86), or even fault (some ARM
-chips). For simple cases like directly loading or storing a packed field, the
-compiler might be able to paper over alignment issues with shifts and masks.
-However if you take a reference to a packed field, it's unlikely that the
-compiler will be able to emit code to avoid an unaligned load.
+In particular, most architectures barely prefer values to be aligned, except for
+some SIMD instructions. Unaligned loads are often unpenalized (x86), and are
+well-supported on modern 64-bit ARM chips. For simple cases like directly
+loading or storing a packed field, the compiler might be able to paper over
+alignment issues with shifts and masks. However if you take a reference to a
+packed field, it's unlikely that the compiler will be able to emit code to avoid
+an unaligned load. For more discussion, see [here][lemire unaligned].
 
 [As this can cause undefined behavior][ub loads], the lint has been implemented
 and it will become a hard error.
 
-`repr(packed)` is not to be used lightly. Unless you have extreme requirements,
-this should not be used.
+`repr(packed)` is to be used lightly. Unless you have extreme requirements, this
+should be used.
 
 This repr is a modifier on `repr(C)` and `repr(Rust)`.
 
@@ -163,3 +164,4 @@ This is a modifier on `repr(C)` and `repr(Rust)`. It is incompatible with
 [rust-bindgen]: https://rust-lang.github.io/rust-bindgen/
 [cbindgen]: https://github.com/eqrion/cbindgen
 [no-niche-pull]: https://github.com/rust-lang/rust/pull/68491
+[lemire unaligned]: https://lemire.me/blog/2012/05/31/data-alignment-for-speed-myth-or-reality
